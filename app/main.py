@@ -4,7 +4,9 @@ from app.core.config import get_settings
 from app.core.error_handler import register_exception_handlers
 from app.db.database import engine
 from app.db import models
-from app.routers import products, orders, health, auth
+from app.routers import products, orders, health, auth, users 
+from fastapi import FastAPI
+from app.middleware.auth_error_handler import AuthErrorHandler
 
 
 def create_app() -> FastAPI:
@@ -24,10 +26,15 @@ def create_app() -> FastAPI:
 
     register_exception_handlers(app)
 
+    app.add_middleware(AuthErrorHandler)
+
+
     app.include_router(health.router)
     app.include_router(auth.router)
     app.include_router(products.router)
     app.include_router(orders.router)
+    app.include_router(users.router)  
+
 
     @app.get("/")
     def root():

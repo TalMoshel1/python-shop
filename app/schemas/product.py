@@ -1,20 +1,23 @@
-from pydantic import BaseModel, Field, PositiveInt, condecimal
+from pydantic import BaseModel, Field
+from typing import Optional
 
 class ProductBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=200)
-    price: condecimal(gt=0, max_digits=10, decimal_places=2)
-    stock: int = Field(..., ge=0)
+    name: str
+    price: float
+    currency: str = Field(default="USD", pattern="^(USD|ILS|EUR)$")  # ✅ רק דולר, שקל או יורו
+    stock: Optional[int] = 0
 
 class ProductCreate(ProductBase):
     pass
 
 class ProductUpdate(BaseModel):
-    name: str | None = Field(None, min_length=1, max_length=200)
-    price: condecimal(gt=0, max_digits=10, decimal_places=2) | None = None
-    stock: int | None = Field(None, ge=0)
+    name: Optional[str]
+    price: Optional[float]
+    currency: Optional[str] = Field(default=None, pattern="^(USD|ILS|EUR)$")
+    stock: Optional[int]
 
 class ProductOut(ProductBase):
     id: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True

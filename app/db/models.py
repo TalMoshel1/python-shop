@@ -1,61 +1,103 @@
-from __future__ import annotations
+# from sqlalchemy import Column, Integer, String, ForeignKey, Float, Enum
+# from sqlalchemy.orm import relationship
+# import enum
+# from datetime import datetime
+
+# from app.db.base import Base  
+
+# class OrderStatus(str, enum.Enum):
+#     pending = "pending"
+#     paid = "paid"
+#     cancelled = "cancelled"
+
+
+# class User(Base):
+#     __tablename__ = "users"
+#     id = Column(Integer, primary_key=True, index=True)
+#     email = Column(String, unique=True, nullable=False)
+#     hashed_password = Column(String, nullable=False)
+#     role = Column(String, default="user")
+#     orders = relationship("Order", back_populates="user")
+
+
+# class Product(Base):
+#     __tablename__ = "products"
+#     id = Column(Integer, primary_key=True)
+#     name = Column(String, unique=True, nullable=False)
+#     price = Column(Float, nullable=False)
+#     stock = Column(Integer, nullable=False)
+#     currency = Column(String, default="USD")
+
+
+# class Order(Base):
+#     __tablename__ = "orders"
+#     id = Column(Integer, primary_key=True)
+#     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+#     status = Column(Enum(OrderStatus), default=OrderStatus.pending, nullable=False)
+#     created_at = Column(DateTime(timezone=True), server_default=func.now())  
+#     user = relationship("User", back_populates="orders")
+#     items = relationship("OrderItem", back_populates="order", cascade="all, delete")
+
+
+# class OrderItem(Base):
+#     __tablename__ = "order_items"
+#     id = Column(Integer, primary_key=True)
+#     order_id = Column(Integer, ForeignKey("orders.id"))
+#     product_id = Column(Integer, ForeignKey("products.id"))
+#     quantity = Column(Integer, nullable=False)
+#     unit_price = Column(Float, nullable=False)
+#     order = relationship("Order", back_populates="items")
+#     product = relationship("Product")
+
+
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Enum, DateTime, func
+from sqlalchemy.orm import relationship
+import enum
 from datetime import datetime
-from typing import List
 
-from sqlalchemy import (
-    Integer,
-    String,
-    Numeric,
-    ForeignKey,
-    DateTime,
-    func,
-)
-from sqlalchemy.orm import relationship, Mapped, mapped_column
-from app.db.base import Base  # ✅ use the shared Base from your app
+from app.db.base import Base
 
-# ✅ USER MODEL
+
+class OrderStatus(str, enum.Enum):
+    pending = "pending"
+    paid = "paid"
+    cancelled = "cancelled"
+
+
 class User(Base):
     __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    role = Column(String, default="user")
+    orders = relationship("Order", back_populates="user")
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
-    hashed_password: Mapped[str] = mapped_column(String, nullable=False)
-    role: Mapped[str] = mapped_column(String, default="user", nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    orders: Mapped[List["Order"]] = relationship("Order", back_populates="user")
-
-# ✅ PRODUCT MODEL
 class Product(Base):
     __tablename__ = "products"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, unique=True, nullable=False)
+    price = Column(Float, nullable=False)
+    stock = Column(Integer, nullable=False)
+    currency = Column(String, default="USD")
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String(200), unique=True, nullable=False)
-    price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    stock: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
-    order_items: Mapped[List["OrderItem"]] = relationship("OrderItem", back_populates="product")
-
-# ✅ ORDER MODEL
 class Order(Base):
     __tablename__ = "orders"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    status = Column(Enum(OrderStatus), default=OrderStatus.pending, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())  # ✅ fixed import
+    user = relationship("User", back_populates="orders")
+    items = relationship("OrderItem", back_populates="order", cascade="all, delete")
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    user: Mapped["User"] = relationship("User", back_populates="orders")
-    items: Mapped[List["OrderItem"]] = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
-
-# ✅ ORDER ITEM MODEL
 class OrderItem(Base):
     __tablename__ = "order_items"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    order_id: Mapped[int] = mapped_column(ForeignKey("orders.id", ondelete="CASCADE"))
-    product_id: Mapped[int] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"))
-    quantity: Mapped[int] = mapped_column(Integer, nullable=False)
-    unit_price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-
-    order: Mapped["Order"] = relationship("Order", back_populates="items")
-    product: Mapped["Product"] = relationship("Product", back_populates="order_items")
+    id = Column(Integer, primary_key=True)
+    order_id = Column(Integer, ForeignKey("orders.id"))
+    product_id = Column(Integer, ForeignKey("products.id"))
+    quantity = Column(Integer, nullable=False)
+    unit_price = Column(Float, nullable=False)
+    order = relationship("Order", back_populates="items")
+    product = relationship("Product")
